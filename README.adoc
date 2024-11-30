@@ -1,0 +1,12 @@
+= crypto-cxx
+:author: Pedro Lamarão <pedro.lamarao@gmail.com>
+
+`crypto-cxx` is an experimental cryptographic library written in C++ 20 with modules for the Clang 18 compiler.
+
+Currently, we are working on the definition of "classic" multi-precision unsigned integers up to the requirements of modular cryptographic applications.
+
+References:
+
+* Donald E. Knuth, "The Art of Computer Programming", volume 2, "Seminumerical Algorithms", third edition
+* MMIXmaster, "MIX to MMIX Conversion", https://mmix.cs.hm.edu/mmixmasters/index.html#MIXtoMMIX
+* BearSSL, "Big Integer Design", https://bearssl.org/bigint.html
