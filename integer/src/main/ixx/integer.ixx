@@ -10,6 +10,8 @@ using namespace std;
 
 namespace br::dev::pedrolamarao::crypto::integer
 {
+    using bit = unsigned _BitInt(1);
+
     // crypto integer.
     // base 2^N.
     // big endian.
@@ -26,7 +28,7 @@ namespace br::dev::pedrolamarao::crypto::integer
         using unit = unsigned _BitInt(N);
 
         // returns: 1 if is lesser, 0 otherwise
-        constexpr auto is_lesser (unit x, unit y) noexcept -> unit
+        constexpr auto is_lesser (unit x, unit y) noexcept -> bit
         {
             unit z { x - y };
             return (z ^ ((y ^ x) & (y ^ z))) >> (N - 1);
@@ -43,6 +45,9 @@ namespace br::dev::pedrolamarao::crypto::integer
 
     public:
 
+        // construction and destruction
+
+        // factory.
         // requires: digits > 0
         static
         auto create (size_t digits) -> integer_2n
@@ -54,17 +59,41 @@ namespace br::dev::pedrolamarao::crypto::integer
             return integer_2n(ptr);
         }
 
-        static
-        auto copy (integer_2n y) -> integer_2n
+        // move constructor.
+        integer_2n (integer_2n && y) noexcept :
+            ptr{y.ptr}
+        {
+            y.ptr = nullptr;
+        }
+
+        // move assignment.
+        auto operator= (integer_2n && y) noexcept -> integer_2n &
+        {
+            using std::swap;
+            swap(ptr,y.ptr);
+            return *this;
+        }
+
+        // copy constructor.
+        integer_2n (integer_2n const & y) :
+            ptr{nullptr}
         {
             auto digits = y.digits();
             auto units = digits + 1;
-            auto ptr = new unit[units];
-            memset(ptr,0,units);
-            ptr[0] = digits;
-            return {ptr};
+            ptr = new unit[units];
+            copy_n(y.ptr,units,ptr);
         }
 
+        // copy assignment.
+        auto operator= (integer_2n const & y) -> integer_2n &
+        {
+            using std::swap;
+            auto tmp = y;
+            swap(*this,tmp);
+            return *this;
+        }
+
+        // destructor.
         ~integer_2n () noexcept
         {
             delete [] ptr;
@@ -72,18 +101,21 @@ namespace br::dev::pedrolamarao::crypto::integer
 
         // properties
 
+        // digit accessor.
         // requires: i < digits()
         auto operator[] (size_t i) const -> unit const&
         {
             return ptr[i+1];
         }
 
+        // digit accessor.
         // requires: i < digits()
         auto operator[] (size_t i) -> unit&
         {
             return ptr[i+1];
         }
 
+        // digit count.
         auto digits () const -> size_t
         {
             return ptr[0];
@@ -93,7 +125,7 @@ namespace br::dev::pedrolamarao::crypto::integer
 
         // requires: x.digits() == y.digits()
         // returns: carry
-        auto sum_accumulate_equisized (integer_2n const& y) -> unit
+        auto sum_accumulate_equisized (integer_2n const& y) -> bit
         {
             unit carry {};
             for (size_t i = 0, j = digits(); i < j; ++i)
@@ -103,10 +135,10 @@ namespace br::dev::pedrolamarao::crypto::integer
                 unit ydigit = y[i];
                 // sum 1
                 unit sum0 = xdigit + ydigit;
-                unit carry0 = is_lesser(sum0,xdigit);
+                bit carry0 = is_lesser(sum0,xdigit);
                 // sum 2
                 unit sum1 = sum0 + carry;
-                unit carry1 = is_lesser(sum1,sum0);
+                bit carry1 = is_lesser(sum1,sum0);
                 // store
                 carry = carry1 | carry0;
                 (*this)[i] = sum1;
@@ -116,7 +148,7 @@ namespace br::dev::pedrolamarao::crypto::integer
 
         // requires: x.digits() == y.digits()
         // returns: carry
-        auto difference_accumulate_equisized (integer_2n const& y) -> unit
+        auto difference_accumulate_equisized (integer_2n const& y) -> bit
         {
             unit carry {};
             for (size_t i = 0, j = digits(); i < j; ++i)
@@ -126,10 +158,10 @@ namespace br::dev::pedrolamarao::crypto::integer
                 unit ydigit = y[i];
                 // difference 1
                 unit difference0 = xdigit - ydigit;
-                unit carry0 = is_lesser(xdigit,difference0);
+                bit carry0 = is_lesser(xdigit,difference0);
                 // difference 2
                 unit difference1 = difference0 - carry;
-                unit carry1 = is_lesser(difference0,difference1);
+                bit carry1 = is_lesser(difference0,difference1);
                 // store
                 carry = carry1 | carry0;
                 (*this)[i] = difference1;
@@ -141,7 +173,7 @@ namespace br::dev::pedrolamarao::crypto::integer
     // requires: x.digits() == y.digits()
     export
     template <unsigned N>
-    auto sum_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
+    auto sum_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> bit
     {
         return x.sum_accumulate_equisized(y);
     }
@@ -149,16 +181,17 @@ namespace br::dev::pedrolamarao::crypto::integer
     // requires: x.digits() == y.digits()
     export
     template <unsigned N>
-    auto sum_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
+    auto sum_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> tuple< integer_2n<N>, bit >
     {
-        auto z = integer_2n<N>::copy(x);
-        return z.sum_accumulate_equisized(y);
+        auto sum = x;
+        auto carry = sum.sum_accumulate_equisized(y);
+        return { std::move(sum), carry };
     }
 
     // requires: x.digits() == y.digits()
     export
     template <unsigned N>
-    auto difference_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
+    auto difference_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> bit
     {
         return x.difference_accumulate_equisized(y);
     }
@@ -166,9 +199,10 @@ namespace br::dev::pedrolamarao::crypto::integer
     // requires: x.digits() == y.digits()
     export
     template <unsigned N>
-    auto difference_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
+    auto difference_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> tuple< integer_2n<N>, bit >
     {
-        auto z = integer_2n<N>::copy(x);
-        return z.difference_accumulate_equisized(y);
+        auto difference = x;
+        auto carry = difference.difference_accumulate_equisized(y);
+        return { std::move(difference), carry };
     }
 }
