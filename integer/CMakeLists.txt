@@ -15,7 +15,7 @@ add_executable(crypto-integer-test)
 
 target_sources(crypto-integer-test
     PRIVATE
-        src/test/cxx/integer.cxx
+        src/test/cxx/integer_2n.cxx
         src/test/cxx/main.cxx
 )
 

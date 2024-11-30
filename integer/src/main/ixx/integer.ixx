@@ -1,7 +1,7 @@
 module;
 
+#include <algorithm>
 #include <cstdint>
-#include <cstring>
 #include <tuple>
 
 export module br.dev.pedrolamarao.crypto.integer;
@@ -10,109 +10,165 @@ using namespace std;
 
 namespace br::dev::pedrolamarao::crypto::integer
 {
-    export using digit = uint8_t;
-
-    constexpr auto is_lesser (digit x, digit y) noexcept -> digit
+    // crypto integer.
+    // base 2^N.
+    // big endian.
+    // arithmetic modulo 2^N.
+    // requires: N > 0
+    export
+    template <unsigned N>
+    class integer_2n
     {
-        digit z = x - y;
-        return (z ^ ((y ^ x) & (y ^ z))) >> 7;
-    }
+    public:
 
-    export class integer
-    {
-        digit * ptr;
+        // crypto integer storage unit.
+        // native arithmetic is modulo 2^N.
+        using unit = unsigned _BitInt(N);
 
-        explicit integer (digit * ptr) noexcept :
-            ptr(ptr)
-        { }
+        // returns: 1 if is lesser, 0 otherwise
+        constexpr auto is_lesser (unit x, unit y) noexcept -> unit
+        {
+            unit z { x - y };
+            return (z ^ ((y ^ x) & (y ^ z))) >> (N - 1);
+        }
+
+    private:
+
+        // crypto integer storage.
+        // stores length followed by digits.
+        unit * ptr;
+
+        // private constructor initializes ptr.
+        explicit integer_2n (unit * ptr) noexcept : ptr{ptr} {}
 
     public:
 
-        // life cycle
-
-        integer (integer&& other) noexcept :
-            ptr(other.ptr)
+        // requires: digits > 0
+        static
+        auto create (size_t digits) -> integer_2n
         {
-            other.ptr = nullptr;
+            auto units = digits + 1;
+            auto ptr = new unit[units];
+            fill_n(ptr,units,0);
+            ptr[0] = digits;
+            return integer_2n(ptr);
         }
 
-        integer (integer const&) = delete;
-
-        ~integer ()
+        static
+        auto copy (integer_2n y) -> integer_2n
         {
-            delete[] ptr;
+            auto digits = y.digits();
+            auto units = digits + 1;
+            auto ptr = new unit[units];
+            memset(ptr,0,units);
+            ptr[0] = digits;
+            return {ptr};
         }
 
-        auto operator= (integer&& other) noexcept -> integer&
+        ~integer_2n () noexcept
         {
-            using std::swap;
-            swap(ptr,other.ptr);
-            return *this;
+            delete [] ptr;
         }
 
-        auto operator= (integer const&) -> integer& = delete;
+        // properties
 
-        static auto copy (integer const& i)
-        {
-            auto size = i.size() + 1;
-            auto ptr = new digit[size];
-            memcpy(ptr,i.ptr,size);
-            return integer(ptr);
-        }
-
-        static auto create (digit n)
-        {
-            auto ptr = new digit[n+1];
-            memset(ptr,0,n+1);
-            ptr[0] = n;
-            return integer(ptr);
-        }
-
-        // methods
-
-        // requires: i < size()
-        auto operator[] (size_t i) const -> digit const&
+        // requires: i < digits()
+        auto operator[] (size_t i) const -> unit const&
         {
             return ptr[i+1];
         }
 
-        // requires: i < size()
-        auto operator[] (size_t i) -> digit&
+        // requires: i < digits()
+        auto operator[] (size_t i) -> unit&
         {
             return ptr[i+1];
         }
 
-        auto size () const -> digit
+        auto digits () const -> size_t
         {
             return ptr[0];
         }
+
+        // operators
+
+        // requires: x.digits() == y.digits()
+        // returns: carry
+        auto sum_accumulate_equisized (integer_2n const& y) -> unit
+        {
+            unit carry {};
+            for (size_t i = 0, j = digits(); i < j; ++i)
+            {
+                // load
+                unit xdigit = (*this)[i];
+                unit ydigit = y[i];
+                // sum 1
+                unit sum0 = xdigit + ydigit;
+                unit carry0 = is_lesser(sum0,xdigit);
+                // sum 2
+                unit sum1 = sum0 + carry;
+                unit carry1 = is_lesser(sum1,sum0);
+                // store
+                carry = carry1 | carry0;
+                (*this)[i] = sum1;
+            }
+            return carry;
+        }
+
+        // requires: x.digits() == y.digits()
+        // returns: carry
+        auto difference_accumulate_equisized (integer_2n const& y) -> unit
+        {
+            unit carry {};
+            for (size_t i = 0, j = digits(); i < j; ++i)
+            {
+                // load
+                unit xdigit = (*this)[i];
+                unit ydigit = y[i];
+                // difference 1
+                unit difference0 = xdigit - ydigit;
+                unit carry0 = is_lesser(xdigit,difference0);
+                // difference 2
+                unit difference1 = difference0 - carry;
+                unit carry1 = is_lesser(difference0,difference1);
+                // store
+                carry = carry1 | carry0;
+                (*this)[i] = difference1;
+            }
+            return carry;
+        }
     };
 
-    // requires: x.size() == y.size()
-    // returns: carry
-    export auto sum_accumulate_equisized (integer& x, integer const& y) -> digit
+    // requires: x.digits() == y.digits()
+    export
+    template <unsigned N>
+    auto sum_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
     {
-        digit carry {};
-        for (size_t i = 0, j = x.size(); i < j; ++i)
-        {
-            digit xdigit = x[i];
-            digit ydigit = y[i];
-            digit sum0 = xdigit + ydigit;
-            digit carry0 = is_lesser(sum0,xdigit);
-            digit sum1 = sum0 + carry;
-            digit carry1 = is_lesser(sum1,sum0);
-            carry = carry1 | carry0;
-            x[i] = sum1;
-        }
-        return carry;
+        return x.sum_accumulate_equisized(y);
     }
 
-    // requires: x.size() == y.size()
-    // returns carry
-    export auto sum_equisized (integer const& x, integer const & y) -> tuple<integer,digit>
+    // requires: x.digits() == y.digits()
+    export
+    template <unsigned N>
+    auto sum_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
     {
-        auto z = integer::copy(x);
-        auto carry = sum_accumulate_equisized(z,y);
-        return { std::move(z), carry };
+        auto z = integer_2n<N>::copy(x);
+        return z.sum_accumulate_equisized(y);
+    }
+
+    // requires: x.digits() == y.digits()
+    export
+    template <unsigned N>
+    auto difference_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
+    {
+        return x.difference_accumulate_equisized(y);
+    }
+
+    // requires: x.digits() == y.digits()
+    export
+    template <unsigned N>
+    auto difference_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> typename integer_2n<N>::unit
+    {
+        auto z = integer_2n<N>::copy(x);
+        return z.difference_accumulate_equisized(y);
     }
 }
