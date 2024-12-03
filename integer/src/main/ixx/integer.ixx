@@ -1,3 +1,5 @@
+// Copyright (C) 2024 Pedro Lamarão <pedro.lamarao@gmail.com>. All rights reserved.
+
 module;
 
 #include <algorithm>
