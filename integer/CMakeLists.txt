@@ -14,8 +14,13 @@ target_sources(crypto-integer
 add_executable(crypto-integer-test)
 
 target_sources(crypto-integer-test
+    PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
+        src/test/ixx/test.ixx
     PRIVATE
         src/test/cxx/integer_2n.cxx
+        src/test/cxx/integer_2n_difference.cxx
+        src/test/cxx/integer_2n_product.cxx
+        src/test/cxx/integer_2n_sum.cxx
         src/test/cxx/main.cxx
 )
 

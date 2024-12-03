@@ -127,7 +127,7 @@ namespace br::dev::pedrolamarao::crypto::integer
         // returns: carry
         auto sum_accumulate_equisized (integer_2n const& y) -> bit
         {
-            unit carry {};
+            bit carry {};
             for (size_t i = 0, j = digits(); i < j; ++i)
             {
                 // load
@@ -150,7 +150,7 @@ namespace br::dev::pedrolamarao::crypto::integer
         // returns: carry
         auto difference_accumulate_equisized (integer_2n const& y) -> bit
         {
-            unit carry {};
+            bit carry {};
             for (size_t i = 0, j = digits(); i < j; ++i)
             {
                 // load
@@ -204,5 +204,29 @@ namespace br::dev::pedrolamarao::crypto::integer
         auto difference = x;
         auto carry = difference.difference_accumulate_equisized(y);
         return { std::move(difference), carry };
+    }
+
+    export
+    template <unsigned N>
+    auto product (integer_2n<N> const& x, integer_2n<N> const& y) -> integer_2n<N>
+    {
+        using unit = unsigned _BitInt(N);
+        using large = unsigned _BitInt(N*2);
+        auto z = integer_2n<N>::create( x.digits() + y.digits() );
+        auto const xz = x.digits();
+        auto const yz = y.digits();
+        for (size_t j = 0; j < yz; ++j) {
+            unit carry {};
+            for (size_t i = 0; i < xz; ++i) {
+                large xd { x[i] };
+                large yd { y[j] };
+                large zd { z[i+j] };
+                large p { ( xd * yd ) + zd + carry };
+                carry = p >> N;
+                z[i+j] = p;
+            }
+            z[j+xz] = carry;
+        }
+        return std::move(z);
     }
 }
