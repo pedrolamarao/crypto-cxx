@@ -3,8 +3,6 @@
 module;
 
 #include <algorithm>
-#include <cstdint>
-#include <tuple>
 
 export module br.dev.pedrolamarao.crypto.integer;
 
@@ -12,29 +10,95 @@ using namespace std;
 
 namespace br::dev::pedrolamarao::crypto::integer
 {
+    // ( 1, 0 )
     using bit = unsigned _BitInt(1);
 
-    // crypto integer.
-    // base 2^N.
-    // big endian.
-    // arithmetic modulo 2^N.
-    // requires: N > 0
     export
-    template <unsigned N>
+    constexpr
+    auto not_ (bit x)
+    {
+        return x ^ 1;
+    }
+
+    // integer.
+    // base 2^B.
+    // arithmetic modulo 2^B.
+    template <unsigned B>
+    requires requires { B > 1; }
+    using word = unsigned _BitInt(B);
+
+    export
+    template <unsigned B>
+    constexpr
+    auto is_zero (word<B> x) -> bit
+    {
+        return ~(x | -x) >> (B - 1);
+    }
+
+    export
+    template <unsigned B>
+    constexpr
+    auto not_zero (word<B> x) -> bit
+    {
+        return (x | -x) >> (B - 1);
+    }
+
+    export
+    template <unsigned B>
+    constexpr
+    auto not_equal (word<B> x, word<B> y) -> bit
+    {
+        return not_zero( x ^ y );
+    }
+
+    export
+    template <unsigned B>
+    constexpr
+    auto is_equal (word<B> x, word<B> y) -> bit
+    {
+        return is_zero( x ^ y );
+    }
+
+    export
+    template <unsigned B>
+    constexpr
+    auto is_less (word<B> x, word<B> y) -> bit
+    {
+        auto z = x - y;
+        return (z ^ ((y ^ x) & (y ^ z))) >> (B - 1);
+    }
+
+    export
+    template <unsigned B>
+    constexpr
+    auto is_greater (word<B> x, word<B> y) -> bit
+    {
+        auto z = y - x;
+        return (z ^ ((x ^ y) & (x ^ z))) >> (B - 1);
+    }
+
+    export
+    template <unsigned B>
+    constexpr
+    auto select (bit control, word<B> x, word<B> y) -> word<B>
+    {
+        return y ^ (-control & (x ^ y));
+    }
+
+    // crypto integer.
+    // base 2^B.
+    // little endian.
+    // arithmetic modulo 2^B.
+    // requires: B > 1
+    export
+    template <unsigned B>
     class integer_2n
     {
     public:
 
         // crypto integer storage unit.
-        // native arithmetic is modulo 2^N.
-        using unit = unsigned _BitInt(N);
-
-        // returns: 1 if is lesser, 0 otherwise
-        constexpr auto is_lesser (unit x, unit y) noexcept -> bit
-        {
-            unit z { x - y };
-            return (z ^ ((y ^ x) & (y ^ z))) >> (N - 1);
-        }
+        // native arithmetic is modulo 2^B.
+        using unit = word<B>;
 
     private:
 
@@ -122,113 +186,157 @@ namespace br::dev::pedrolamarao::crypto::integer
         {
             return ptr[0];
         }
-
-        // operators
-
-        // requires: x.digits() == y.digits()
-        // returns: carry
-        auto sum_accumulate_equisized (integer_2n const& y) -> bit
-        {
-            bit carry {};
-            for (size_t i = 0, j = digits(); i < j; ++i)
-            {
-                // load
-                unit xdigit = (*this)[i];
-                unit ydigit = y[i];
-                // sum 1
-                unit sum0 = xdigit + ydigit;
-                bit carry0 = is_lesser(sum0,xdigit);
-                // sum 2
-                unit sum1 = sum0 + carry;
-                bit carry1 = is_lesser(sum1,sum0);
-                // store
-                carry = carry1 | carry0;
-                (*this)[i] = sum1;
-            }
-            return carry;
-        }
-
-        // requires: x.digits() == y.digits()
-        // returns: carry
-        auto difference_accumulate_equisized (integer_2n const& y) -> bit
-        {
-            bit carry {};
-            for (size_t i = 0, j = digits(); i < j; ++i)
-            {
-                // load
-                unit xdigit = (*this)[i];
-                unit ydigit = y[i];
-                // difference 1
-                unit difference0 = xdigit - ydigit;
-                bit carry0 = is_lesser(xdigit,difference0);
-                // difference 2
-                unit difference1 = difference0 - carry;
-                bit carry1 = is_lesser(difference0,difference1);
-                // store
-                carry = carry1 | carry0;
-                (*this)[i] = difference1;
-            }
-            return carry;
-        }
     };
+
+    // relations
+
+    export
+    template <unsigned B>
+    auto is_zero (integer_2n<B> const & x) -> bit
+    {
+        using unit = typename integer_2n<B>::unit;
+        unit z {};
+        auto const d = x.digits();
+        for (auto i = 0u; i != d; ++i) {
+            z |= x[i];
+        }
+        return is_zero(z);
+    }
+
+    export
+    template <unsigned B>
+    auto is_equal_equisized (integer_2n<B> const & x, integer_2n<B> const & y) -> bit
+    {
+        using unit = typename integer_2n<B>::unit;
+        unit z {};
+        auto const d = x.digits();
+        for (auto i = 0u; i != d; ++i) {
+            z |= x[i] ^ y[i];
+        }
+        return is_zero(z);
+    }
+
+    // operators
 
     // requires: x.digits() == y.digits()
     export
-    template <unsigned N>
-    auto sum_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> bit
+    template <unsigned B>
+    auto sum_accumulate_equisized (integer_2n<B>& x, integer_2n<B> const& y) -> bit
     {
-        return x.sum_accumulate_equisized(y);
+        using unit = typename integer_2n<B>::unit;
+        bit carry {};
+        for (size_t i = 0, j = x.digits(); i < j; ++i)
+        {
+            // load
+            unit xdigit = x[i];
+            unit ydigit = y[i];
+            // sum 1
+            unit sum0 = xdigit + ydigit;
+            bit carry0 = is_less(sum0,xdigit);
+            // sum 2
+            unit sum1 = sum0 + carry;
+            bit carry1 = is_less(sum1,sum0);
+            // store
+            carry = carry1 | carry0;
+            x[i] = sum1;
+        }
+        return carry;
     }
 
     // requires: x.digits() == y.digits()
     export
-    template <unsigned N>
-    auto sum_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> tuple< integer_2n<N>, bit >
+    template <unsigned B>
+    auto sum_equisized (integer_2n<B> const& x, integer_2n<B> const& y) -> tuple< integer_2n<B>, bit >
     {
         auto sum = x;
-        auto carry = sum.sum_accumulate_equisized(y);
+        auto carry = sum_accumulate_equisized(sum,y);
+        return { std::move(sum), carry };
+    }
+
+    export
+    template <unsigned B>
+    auto sum (integer_2n<B> const& x, typename integer_2n<B>::unit y) -> tuple< integer_2n<B>, bit >
+    {
+        auto tmp = integer_2n<B>::create(x.digits());
+        tmp[0] = y;
+        auto sum = x;
+        auto carry = sum.sum_accumulate_equisized(tmp);
         return { std::move(sum), carry };
     }
 
     // requires: x.digits() == y.digits()
     export
-    template <unsigned N>
-    auto difference_accumulate_equisized (integer_2n<N>& x, integer_2n<N> const& y) -> bit
+    template <unsigned B>
+    auto difference_accumulate_equisized (integer_2n<B>& x, integer_2n<B> const& y) -> bit
     {
-        return x.difference_accumulate_equisized(y);
+        using unit = typename integer_2n<B>::unit;
+        bit carry {};
+        for (size_t i = 0, j = x.digits(); i < j; ++i)
+        {
+            // load
+            unit xdigit = x[i];
+            unit ydigit = y[i];
+            // difference 1
+            unit difference0 = xdigit - ydigit;
+            bit carry0 = is_less(xdigit,difference0);
+            // difference 2
+            unit difference1 = difference0 - carry;
+            bit carry1 = is_less(difference0,difference1);
+            // store
+            carry = carry1 | carry0;
+            x[i] = difference1;
+        }
+        return carry;
     }
 
     // requires: x.digits() == y.digits()
     export
-    template <unsigned N>
-    auto difference_equisized (integer_2n<N> const& x, integer_2n<N> const& y) -> tuple< integer_2n<N>, bit >
+    template <unsigned B>
+    auto difference_equisized (integer_2n<B> const& x, integer_2n<B> const& y) -> tuple< integer_2n<B>, bit >
     {
         auto difference = x;
-        auto carry = difference.difference_accumulate_equisized(y);
+        auto carry = difference_accumulate_equisized(difference,y);
         return { std::move(difference), carry };
     }
 
     export
-    template <unsigned N>
-    auto product (integer_2n<N> const& x, integer_2n<N> const& y) -> integer_2n<N>
+    template <unsigned B>
+    auto product (integer_2n<B> const& x, integer_2n<B> const& y) -> integer_2n<B>
     {
-        using unit = unsigned _BitInt(N);
-        using large = unsigned _BitInt(N*2);
-        auto z = integer_2n<N>::create( x.digits() + y.digits() );
+        using unit = word<B>;
+        using large = word<B*2>;
+        auto z = integer_2n<B>::create( x.digits() + y.digits() );
         auto const xz = x.digits();
         auto const yz = y.digits();
         for (size_t j = 0; j < yz; ++j) {
             unit carry {};
             for (size_t i = 0; i < xz; ++i) {
-                large xd { x[i] };
-                large yd { y[j] };
+                // load
+                large xd = x[i];
+                large yd = y[j];
                 large zd { z[i+j] };
-                large p { ( xd * yd ) + zd + carry };
-                carry = p >> N;
+                // multiply and add
+                large p = ( xd * yd ) + zd + carry;
+                // store
+                carry = p >> B;
                 z[i+j] = p;
             }
             z[j+xz] = carry;
         }
         return std::move(z);
     }
+
+    export
+    template <unsigned B>
+    auto twice (integer_2n<B> const& x) -> integer_2n<B>;
+
+    export
+    template <unsigned B>
+    auto half (integer_2n<B> const& x) -> integer_2n<B>;
+
+    // requires: y > 0
+    // returns: (quotient,remainder)
+    export
+    template <unsigned B>
+    auto division_equisized (integer_2n<B> const& x, integer_2n<B> const& y) -> pair<integer_2n<B>,integer_2n<B>>;
 }

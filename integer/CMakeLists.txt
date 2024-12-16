@@ -6,22 +6,26 @@ find_package(GTest REQUIRED)
 
 add_library(crypto-integer)
 
+file(GLOB_RECURSE main_cxx_sources CONFIGURE_DEPENDS "src/main/cxx/*")
+file(GLOB_RECURSE main_ixx_sources CONFIGURE_DEPENDS "src/main/ixx/*")
+
 target_sources(crypto-integer
     PUBLIC FILE_SET all_my_modules TYPE CXX_MODULES FILES
-    src/main/ixx/integer.ixx
+    ${main_ixx_sources}
+    PRIVATE
+    ${main_cxx_sources}
 )
 
 add_executable(crypto-integer-test)
 
+file(GLOB_RECURSE test_cxx_sources CONFIGURE_DEPENDS "src/test/cxx/*")
+file(GLOB_RECURSE test_ixx_sources CONFIGURE_DEPENDS "src/test/ixx/*")
+
 target_sources(crypto-integer-test
     PRIVATE FILE_SET all_my_modules TYPE CXX_MODULES FILES
-        src/test/ixx/test.ixx
+        ${test_ixx_sources}
     PRIVATE
-        src/test/cxx/integer_2n.cxx
-        src/test/cxx/integer_2n_difference.cxx
-        src/test/cxx/integer_2n_product.cxx
-        src/test/cxx/integer_2n_sum.cxx
-        src/test/cxx/main.cxx
+        ${test_cxx_sources}
 )
 
 target_link_libraries(crypto-integer-test crypto-integer GTest::gmock)
