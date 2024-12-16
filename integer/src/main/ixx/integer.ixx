@@ -195,9 +195,26 @@ namespace br::dev::pedrolamarao::crypto::integer
     auto is_zero (integer_2n<B> const & x) -> bit
     {
         using unit = typename integer_2n<B>::unit;
-        unit z {};
         auto const d = x.digits();
+        unit z {};
         for (auto i = 0u; i != d; ++i) {
+            z |= x[i];
+        }
+        return is_zero(z);
+    }
+
+    template <unsigned B>
+    // requires: x.digits() >= y.digits()
+    auto is_equal_0 (integer_2n<B> const & x, integer_2n<B> const & y) -> bit
+    {
+        using unit = typename integer_2n<B>::unit;
+        auto const xd = x.digits();
+        auto const yd = y.digits();
+        unit z {};
+        for (auto i = 0u; i != yd; ++i) {
+            z |= x[i] ^ y[i];
+        }
+        for (auto i = yd; i != xd; ++i) {
             z |= x[i];
         }
         return is_zero(z);
@@ -205,15 +222,10 @@ namespace br::dev::pedrolamarao::crypto::integer
 
     export
     template <unsigned B>
-    auto is_equal_equisized (integer_2n<B> const & x, integer_2n<B> const & y) -> bit
+    auto is_equal (integer_2n<B> const & x, integer_2n<B> const & y) -> bit
     {
-        using unit = typename integer_2n<B>::unit;
-        unit z {};
-        auto const d = x.digits();
-        for (auto i = 0u; i != d; ++i) {
-            z |= x[i] ^ y[i];
-        }
-        return is_zero(z);
+        if (x.digits() >= y.digits()) return is_equal_0(x,y);
+        else                          return is_equal_0(y,x);
     }
 
     // operators
