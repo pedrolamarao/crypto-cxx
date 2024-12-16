@@ -3,6 +3,7 @@
 module;
 
 #include <algorithm>
+#include <tuple>
 
 export module br.dev.pedrolamarao.crypto.integer;
 
@@ -230,21 +231,23 @@ namespace br::dev::pedrolamarao::crypto::integer
 
     // operators
 
-    // requires: x.digits() == y.digits()
     export
     template <unsigned B>
-    auto sum_accumulate_equisized (integer_2n<B>& x, integer_2n<B> const& y) -> bit
+    // requires: x.digits() >= y.digits()
+    auto add_accumulate (integer_2n<B> & x, integer_2n<B> const & y) -> bit
     {
         using unit = typename integer_2n<B>::unit;
+        const auto xd = x.digits();
+        const auto yd = y.digits();
         bit carry {};
-        for (size_t i = 0, j = x.digits(); i < j; ++i)
+        for (auto i = 0u; i < yd; ++i)
         {
             // load
-            unit xdigit = x[i];
-            unit ydigit = y[i];
+            unit xi = x[i];
+            unit yi = y[i];
             // sum 1
-            unit sum0 = xdigit + ydigit;
-            bit carry0 = is_less(sum0,xdigit);
+            unit sum0 = xi + yi;
+            bit carry0 = is_less(sum0,xi);
             // sum 2
             unit sum1 = sum0 + carry;
             bit carry1 = is_less(sum1,sum0);
@@ -252,17 +255,35 @@ namespace br::dev::pedrolamarao::crypto::integer
             carry = carry1 | carry0;
             x[i] = sum1;
         }
+        for (auto i = yd; i != xd; ++i)
+        {
+            // load
+            unit xi = x[i];
+            // sum
+            unit sum0 = xi + carry;
+            bit carry0 = is_less(sum0,xi);
+            // store
+            carry = carry0;
+            x[i] = sum0;
+        }
         return carry;
     }
 
-    // requires: x.digits() == y.digits()
+    template <unsigned B>
+    // requires: x.digits() >= y.digits()
+    auto add_0 (integer_2n<B> const & x, integer_2n<B> const & y) -> tuple< integer_2n<B>, bit >
+    {
+        auto z = x;
+        auto carry = add_accumulate(z,y);
+        return { std::move(z), carry };
+    }
+
     export
     template <unsigned B>
-    auto sum_equisized (integer_2n<B> const& x, integer_2n<B> const& y) -> tuple< integer_2n<B>, bit >
+    auto add (integer_2n<B> const & x, integer_2n<B> const & y) -> tuple< integer_2n<B>, bit >
     {
-        auto sum = x;
-        auto carry = sum_accumulate_equisized(sum,y);
-        return { std::move(sum), carry };
+        if (x.digits() >= y.digits()) return add_0(x,y);
+        else                          return add_0(y,x);
     }
 
     export
