@@ -383,4 +383,16 @@ namespace br::dev::pedrolamarao::crypto::integer
         }
         return std::move(product);
     }
+
+    export
+    template <unsigned B>
+    // requires: x.digits() >= y.digits()
+    auto remain (integer_2n<B> const & x, integer_2n<B> const & y) -> integer_2n<B>
+    {
+        auto z = x;
+        while (is_less(y,z) | is_equal(y,z)) {
+            subtract_accumulate(z,y);
+        }
+        return std::move(z);
+    }
 }
