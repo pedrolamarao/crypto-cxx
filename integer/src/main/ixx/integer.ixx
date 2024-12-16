@@ -360,18 +360,4 @@ namespace br::dev::pedrolamarao::crypto::integer
         }
         return std::move(product);
     }
-
-    export
-    template <unsigned B>
-    auto twice (integer_2n<B> const& x) -> integer_2n<B>;
-
-    export
-    template <unsigned B>
-    auto half (integer_2n<B> const& x) -> integer_2n<B>;
-
-    // requires: y > 0
-    // returns: (quotient,remainder)
-    export
-    template <unsigned B>
-    auto division_equisized (integer_2n<B> const& x, integer_2n<B> const& y) -> pair<integer_2n<B>,integer_2n<B>>;
 }
