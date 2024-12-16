@@ -286,21 +286,23 @@ namespace br::dev::pedrolamarao::crypto::integer
         else                          return add_0(y,x);
     }
 
-    // requires: x.digits() == y.digits()
     export
     template <unsigned B>
-    auto difference_accumulate_equisized (integer_2n<B>& x, integer_2n<B> const& y) -> bit
+    // requires: x.digits() >= y.digits()
+    auto subtract_accumulate (integer_2n<B>& x, integer_2n<B> const& y) -> bit
     {
         using unit = typename integer_2n<B>::unit;
+        const auto xd = x.digits();
+        const auto yd = y.digits();
         bit carry {};
-        for (size_t i = 0, j = x.digits(); i < j; ++i)
+        for (auto i = 0u; i < yd; ++i)
         {
             // load
-            unit xdigit = x[i];
-            unit ydigit = y[i];
+            unit xi = x[i];
+            unit yi = y[i];
             // difference 1
-            unit difference0 = xdigit - ydigit;
-            bit carry0 = is_less(xdigit,difference0);
+            unit difference0 = xi - yi;
+            bit carry0 = is_less(xi,difference0);
             // difference 2
             unit difference1 = difference0 - carry;
             bit carry1 = is_less(difference0,difference1);
@@ -308,17 +310,28 @@ namespace br::dev::pedrolamarao::crypto::integer
             carry = carry1 | carry0;
             x[i] = difference1;
         }
+        for (auto i = yd; i != xd; ++i)
+        {
+            // load
+            unit xi = x[i];
+            // difference 2
+            unit difference1 = xi - carry;
+            bit carry1 = is_less(xi,difference1);
+            // store
+            carry = carry1;
+            x[i] = difference1;
+        }
         return carry;
     }
 
-    // requires: x.digits() == y.digits()
     export
     template <unsigned B>
-    auto difference_equisized (integer_2n<B> const& x, integer_2n<B> const& y) -> tuple< integer_2n<B>, bit >
+    // requires: x.digits() >= y.digits()
+    auto subtract (integer_2n<B> const & x, integer_2n<B> const & y) -> tuple< integer_2n<B>, bit >
     {
-        auto difference = x;
-        auto carry = difference_accumulate_equisized(difference,y);
-        return { std::move(difference), carry };
+        auto z = x;
+        auto carry = subtract_accumulate(z,y);
+        return { std::move(z), carry };
     }
 
     export
