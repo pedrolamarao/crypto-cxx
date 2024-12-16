@@ -286,17 +286,6 @@ namespace br::dev::pedrolamarao::crypto::integer
         else                          return add_0(y,x);
     }
 
-    export
-    template <unsigned B>
-    auto sum (integer_2n<B> const& x, typename integer_2n<B>::unit y) -> tuple< integer_2n<B>, bit >
-    {
-        auto tmp = integer_2n<B>::create(x.digits());
-        tmp[0] = y;
-        auto sum = x;
-        auto carry = sum.sum_accumulate_equisized(tmp);
-        return { std::move(sum), carry };
-    }
-
     // requires: x.digits() == y.digits()
     export
     template <unsigned B>
