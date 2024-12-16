@@ -336,29 +336,29 @@ namespace br::dev::pedrolamarao::crypto::integer
 
     export
     template <unsigned B>
-    auto product (integer_2n<B> const& x, integer_2n<B> const& y) -> integer_2n<B>
+    auto multiply (integer_2n<B> const& x, integer_2n<B> const& y) -> integer_2n<B>
     {
         using unit = word<B>;
         using large = word<B*2>;
-        auto z = integer_2n<B>::create( x.digits() + y.digits() );
-        auto const xz = x.digits();
-        auto const yz = y.digits();
-        for (size_t j = 0; j < yz; ++j) {
+        auto const xd = x.digits();
+        auto const yd = y.digits();
+        auto product = integer_2n<B>::create( xd + yd );
+        for (size_t j = 0; j < yd; ++j) {
             unit carry {};
-            for (size_t i = 0; i < xz; ++i) {
+            for (size_t i = 0; i < xd; ++i) {
                 // load
-                large xd = x[i];
-                large yd = y[j];
-                large zd { z[i+j] };
+                large xi = x[i];
+                large yi = y[j];
+                large pij = product[i+j];
                 // multiply and add
-                large p = ( xd * yd ) + zd + carry;
+                large z = ( xi * yi ) + pij + carry;
                 // store
-                carry = p >> B;
-                z[i+j] = p;
+                carry = z >> B;
+                product[i+j] = z;
             }
-            z[j+xz] = carry;
+            product[j+xd] = carry;
         }
-        return std::move(z);
+        return std::move(product);
     }
 
     export

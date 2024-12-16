@@ -16,7 +16,7 @@ TYPED_TEST(integer_2n_test,product_1_0_0)
     auto y = TypeParam::create(1);
     y[0] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 0u );
@@ -31,7 +31,7 @@ TYPED_TEST(integer_2n_test,product_1_0_1)
     auto y = TypeParam::create(1);
     y[0] = 1;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 0u );
@@ -46,7 +46,7 @@ TYPED_TEST(integer_2n_test,product_1_0_2)
     auto y = TypeParam::create(1);
     y[0] = 2;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 0u );
@@ -64,7 +64,7 @@ TYPED_TEST(integer_2n_test,product_1_0_max)
     auto y = TypeParam::create(1);
     y[0] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 0u );
@@ -79,7 +79,7 @@ TYPED_TEST(integer_2n_test,product_1_1_0)
     auto y = TypeParam::create(1);
     y[0] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 0u );
@@ -94,7 +94,7 @@ TYPED_TEST(integer_2n_test,product_1_1_1)
     auto y = TypeParam::create(1);
     y[0] = 1;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 1u );
@@ -109,7 +109,7 @@ TYPED_TEST(integer_2n_test,product_1_1_2)
     auto y = TypeParam::create(1);
     y[0] = 2;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 2u );
@@ -127,7 +127,7 @@ TYPED_TEST(integer_2n_test,product_1_1_max)
     auto y = TypeParam::create(1);
     y[0] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], max );
@@ -142,7 +142,7 @@ TYPED_TEST(integer_2n_test,product_1_2_0)
     auto y = TypeParam::create(1);
     y[0] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 0u );
@@ -157,7 +157,7 @@ TYPED_TEST(integer_2n_test,product_1_2_1)
     auto y = TypeParam::create(1);
     y[0] = 1;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 2u );
@@ -172,7 +172,7 @@ TYPED_TEST(integer_2n_test,product_1_2_2)
     auto y = TypeParam::create(1);
     y[0] = 2;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 4u );
@@ -191,7 +191,7 @@ TYPED_TEST(integer_2n_test,product_1_2_max)
     auto y = TypeParam::create(1);
     y[0] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], max_predecessor );
@@ -209,7 +209,7 @@ TYPED_TEST(integer_2n_test,product_1_max_0)
     auto y = TypeParam::create(1);
     y[0] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 0 );
@@ -227,7 +227,7 @@ TYPED_TEST(integer_2n_test,product_1_max_1)
     auto y = TypeParam::create(1);
     y[0] = 1;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], max );
@@ -246,7 +246,7 @@ TYPED_TEST(integer_2n_test,product_1_max_2)
     auto y = TypeParam::create(1);
     y[0] = 2;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], max_predecessor );
@@ -265,7 +265,7 @@ TYPED_TEST(integer_2n_test,product_1_max_max)
     auto y = TypeParam::create(1);
     y[0] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 2 );
     ASSERT_EQ( z[0], 1 );
@@ -284,7 +284,7 @@ TYPED_TEST(integer_2n_test,product_2_0_0)
     y[0] = 0;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 0u );
@@ -303,7 +303,7 @@ TYPED_TEST(integer_2n_test,product_2_0_1)
     y[0] = 1;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 0u );
@@ -322,7 +322,7 @@ TYPED_TEST(integer_2n_test,product_2_0_2)
     y[0] = 2;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 0u );
@@ -344,7 +344,7 @@ TYPED_TEST(integer_2n_test,product_2_0_max)
     y[0] = max;
     y[1] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 0u );
@@ -363,7 +363,7 @@ TYPED_TEST(integer_2n_test,product_2_1_0)
     y[0] = 0;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 0u );
@@ -382,7 +382,7 @@ TYPED_TEST(integer_2n_test,product_2_1_1)
     y[0] = 1;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 1u );
@@ -401,7 +401,7 @@ TYPED_TEST(integer_2n_test,product_2_1_2)
     y[0] = 2;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 2u );
@@ -423,7 +423,7 @@ TYPED_TEST(integer_2n_test,product_2_1_max)
     y[0] = max;
     y[1] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], max );
@@ -442,7 +442,7 @@ TYPED_TEST(integer_2n_test,product_2_2_0)
     y[0] = 0;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 0u );
@@ -461,7 +461,7 @@ TYPED_TEST(integer_2n_test,product_2_2_1)
     y[0] = 1;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 2u );
@@ -480,7 +480,7 @@ TYPED_TEST(integer_2n_test,product_2_2_2)
     y[0] = 2;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 4u );
@@ -503,7 +503,7 @@ TYPED_TEST(integer_2n_test,product_2_2_max)
     y[0] = max;
     y[1] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], max_predecessor );
@@ -525,7 +525,7 @@ TYPED_TEST(integer_2n_test,product_2_max_0)
     y[0] = 0;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 0u );
@@ -547,7 +547,7 @@ TYPED_TEST(integer_2n_test,product_2_max_1)
     y[0] = 1;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], max );
@@ -570,7 +570,7 @@ TYPED_TEST(integer_2n_test,product_2_max_2)
     y[0] = 2;
     y[1] = 0;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], max_predecessor );
@@ -593,7 +593,7 @@ TYPED_TEST(integer_2n_test,product_2_max_max)
     y[0] = max;
     y[1] = max;
 
-    auto z = product(x,y);
+    auto z = multiply(x,y);
 
     ASSERT_EQ( z.digits(), 4 );
     ASSERT_EQ( z[0], 1 );
