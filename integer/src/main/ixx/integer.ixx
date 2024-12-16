@@ -260,11 +260,11 @@ namespace br::dev::pedrolamarao::crypto::integer
             // load
             unit xi = x[i];
             // sum
-            unit sum0 = xi + carry;
-            bit carry0 = is_less(sum0,xi);
+            unit sum1 = xi + carry;
+            bit carry1 = is_less(sum1,xi);
             // store
-            carry = carry0;
-            x[i] = sum0;
+            carry = carry1;
+            x[i] = sum1;
         }
         return carry;
     }
