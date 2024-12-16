@@ -229,6 +229,29 @@ namespace br::dev::pedrolamarao::crypto::integer
         else                          return is_equal_0(y,x);
     }
 
+    export
+    template <unsigned B>
+    // requires: x.digits() >= y.digits()
+    auto is_less (integer_2n<B> const & x, integer_2n<B> const & y) -> bit
+    {
+        const auto xd = x.digits();
+        const auto yd = y.digits();
+        bit r {};
+        for (auto i = xd-1; i != yd-1; --i) {
+            auto xi = x[i];
+            r |= not_zero(xi);
+        }
+        for (auto i = yd-1; i != 0; --i) {
+            auto xi = x[i];
+            auto yi = y[i];
+            r |= is_greater(xi,yi);
+        }
+        auto xi = x[0];
+        auto yi = y[0];
+        r |= is_greater(xi,yi) | is_equal(xi,yi);
+        return not_(r);
+    }
+
     // operators
 
     export
